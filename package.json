@@ -5,7 +5,10 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:ui": "rm -rf ../fsopen-part3/dist && cd ../frontend && npm run build && cp -r dist ../fsopen-part3/dist",
+    "deploy": "git add . && git commit -m 'Deploying to Heroku' && git push heroku main",
+    "deploy:full": "npm run build:ui && git add . && git commit -m \"Deploying with updated frontend\" && git push heroku main" 
   },
   "author": "David Pérez",
   "license": "ISC",
