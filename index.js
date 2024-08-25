@@ -1,4 +1,5 @@
 const express = require('express')
+const path = require('path');
 const cors = require('cors')
 const morgan = require('morgan')
 
@@ -41,6 +42,7 @@ let persons = [
 //  Middlewares
 
 app.use(express.json())
+app.use(express.static(path.join(__dirname, 'dist')));
 app.use(cors())
 
 app.use(
@@ -108,6 +110,10 @@ app.get('/api/info', (request, response) => {
     const info = `Phonebook has info for ${persons.length} people`
     response.send(`${info} <br /> ${date}`)
 })
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
 
 const unknownEndpoint = (request, response) => {
     response.status(404).send({ error: 'unknown endpoint' });
