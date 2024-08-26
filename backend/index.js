@@ -64,13 +64,10 @@ app.get('/api/persons', (request, response) => {
 // Get Person by ID
 app.get('/api/persons/:id', (request, response) => {
     const id = request.params.id
-    const person = persons.find(person => person.id === id)
 
-    if (person) {
+    Person.findById(id).then(person => {
         response.json(person)
-    } else {
-        response.status(404).end()
-    }
+    })
 })
 
 // Add Person
@@ -83,35 +80,38 @@ app.post('/api/persons', (request, response) => {
         })
     }
 
-    if (persons.find(person => person.name === body.name)) {
-        return response.status(400).json({ 
-            error: 'Name must be unique' 
-        })
-    }
-  
-    const person = {
-        id: generateId(),
+    const person = new Person({
         name: body.name,
         number: body.number,
-    }
-  
-    persons = persons.concat(person)
-  
-    response.json(persons)
+    })
+
+    person.save().then(savedPerson => {
+        response.json(savedPerson)
+    })
 })
 
 // Delete Person
 app.delete('/api/persons/:id', (request, response) => {
     const id = request.params.id
-    persons = persons.filter(person => person.id !== id)
-  
-    response.status(204).end()
+
+    Person 
+        .findByIdAndDelete(id)
+        .then(result => {
+            response.status(204).end()
+        })
+        .catch(error => {
+            console.log(error)
+            response.status(400).send({ error: 'malformatted id' })
+        })
 })
 
 app.get('/api/info', (request, response) => {
     const date = new Date()
-    const info = `Phonebook has info for ${persons.length} people`
-    response.send(`${info} <br /> ${date}`)
+
+    Person.find({}).then(people => {
+        const info = `Phonebook has info for ${people.length} people`
+        response.send(`${info} <br /> ${date}`)
+    })
 })
 
 app.get('*', (req, res) => {
