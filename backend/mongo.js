@@ -20,6 +20,14 @@ const peopleSchema = new mongoose.Schema({
     number: Number,
 })
 
+peopleSchema.set('toJSON', {
+    transform: (document, returnedObject) => {
+      returnedObject.id = returnedObject._id.toString()
+      delete returnedObject._id
+      delete returnedObject.__v
+    }
+})
+
 const Person = mongoose.model('Person', peopleSchema)
 
 // If the number of arguments is 3, then we print all the persons in the phonebook
