@@ -2,9 +2,23 @@ const express = require('express')
 const path = require('path');
 const cors = require('cors')
 const morgan = require('morgan')
+const mongoose = require('mongoose')
 
+require('dotenv').config()
 
 const app = express()
+
+const url = process.env.MONGODB_URI
+  
+mongoose.set('strictQuery',false)
+mongoose.connect(url)
+
+const personSchema = new mongoose.Schema({
+    name: String,
+    number: Number,
+})
+
+const Person = mongoose.model('Person', personSchema)
 
 morgan.token('postData', function (req) {
     if (req.method === 'POST') {
@@ -16,28 +30,28 @@ const generateId = () => {
     return Math.floor(Math.random() * 10000)
 }
 
-let persons = [
-    { 
-      "id": "1",
-      "name": "Arto Hellas", 
-      "number": "040-123456"
-    },
-    { 
-      "id": "2",
-      "name": "Ada Lovelace", 
-      "number": "39-44-5323523"
-    },
-    { 
-      "id": "3",
-      "name": "Dan Abramov", 
-      "number": "12-43-234345"
-    },
-    { 
-      "id": "4",
-      "name": "Mary Poppendieck", 
-      "number": "39-23-6423122"
-    }
-]
+// let persons = [
+//     { 
+//       "id": "1",
+//       "name": "Arto Hellas", 
+//       "number": "040-123456"
+//     },
+//     { 
+//       "id": "2",
+//       "name": "Ada Lovelace", 
+//       "number": "39-44-5323523"
+//     },
+//     { 
+//       "id": "3",
+//       "name": "Dan Abramov", 
+//       "number": "12-43-234345"
+//     },
+//     { 
+//       "id": "4",
+//       "name": "Mary Poppendieck", 
+//       "number": "39-23-6423122"
+//     }
+// ]
 
 //  Middlewares
 
@@ -55,7 +69,9 @@ app.use(
 
 // Get All Persons
 app.get('/api/persons', (request, response) => {
-    response.json(persons)
+    Person.find({}).then(people => {
+        response.json(people)
+    })
 })
 
 // Get Person by ID
