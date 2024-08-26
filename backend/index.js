@@ -1,32 +1,11 @@
+require('dotenv').config()
 const express = require('express')
 const path = require('path');
 const cors = require('cors')
 const morgan = require('morgan')
-const mongoose = require('mongoose')
-
-require('dotenv').config()
+const Person = require('./models/Person')
 
 const app = express()
-
-const url = process.env.MONGODB_URI
-  
-mongoose.set('strictQuery',false)
-mongoose.connect(url)
-
-const personSchema = new mongoose.Schema({
-    name: String,
-    number: Number,
-})
-
-personSchema.set('toJSON', {
-    transform: (document, returnedObject) => {
-      returnedObject.id = returnedObject._id.toString()
-      delete returnedObject._id
-      delete returnedObject.__v
-    }
-})
-
-const Person = mongoose.model('Person', personSchema)
 
 morgan.token('postData', function (req) {
     if (req.method === 'POST') {
@@ -145,7 +124,7 @@ const unknownEndpoint = (request, response) => {
 
 app.use(unknownEndpoint);
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
