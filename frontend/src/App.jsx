@@ -75,13 +75,21 @@ const App = () => {
             number: newNumber,
         };
 
-        personService.create(newPerson).then((createdPerson) => {
-            setPersons([...persons, createdPerson]);
-            setNewName('');
-            setNewNumber('');
-            setMessage({ type: 'success', content: `${newPerson.name} was created succesfuly` });
-            clearNotification();
-        });
+        personService.create(newPerson)
+            .then((createdPerson) => {
+                setPersons([...persons, createdPerson]);
+                setNewName('');
+                setNewNumber('');
+                setMessage({ type: 'success', content: `${newPerson.name} was created succesfuly` });
+                clearNotification();
+            })
+            .catch((error) => {
+                setMessage({
+                    type: 'error',
+                    content: `${error.response.data.error}`,
+                });
+                clearNotification();
+            });
     };
 
     const handleDeletePerson = (id) => {
