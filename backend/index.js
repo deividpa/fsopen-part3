@@ -42,8 +42,8 @@ const generateId = () => {
 
 //  Middlewares
 
-app.use(express.json())
 app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.json())
 app.use(cors())
 
 app.use(
@@ -62,12 +62,18 @@ app.get('/api/persons', (request, response) => {
 })
 
 // Get Person by ID
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
     const id = request.params.id
 
-    Person.findById(id).then(person => {
-        response.json(person)
-    })
+    Person.findById(id)
+        .then(person => {
+            if (person) {
+                response.json(person)
+            } else {
+                response.status(404).end()
+            }
+        })
+        .catch(error => next(error))
 })
 
 // Add Person
@@ -80,14 +86,47 @@ app.post('/api/persons', (request, response) => {
         })
     }
 
-    const person = new Person({
+    Person.findOne({ name: body.name })
+        .then(existingPerson => {
+            if (existingPerson) {
+                // If person exists, the number is updated
+                Person.findByIdAndUpdate(existingPerson._id, { number: body.number }, { new: true })
+                    .then(updatedPerson => {
+                        response.json(updatedPerson)
+                    })
+                    .catch(error => next(error))
+            } else {
+                // If person does not exist, create a new one
+                const person = new Person({
+                    name: body.name,
+                    number: body.number,
+                })
+
+                person.save()
+                    .then(savedPerson => {
+                        response.json(savedPerson)
+                    })
+                    .catch(error => next(error))
+            }
+        })
+        .catch(error => next(error))
+})
+
+// Update Person
+app.put('/api/persons/:id', (request, response, next) => {
+    const id = request.params.id
+    const body = request.body
+
+    const person = {
         name: body.name,
         number: body.number,
-    })
+    }
 
-    person.save().then(savedPerson => {
-        response.json(savedPerson)
-    })
+    Person.findByIdAndUpdate(id, person, { new: true })
+        .then(updatedPerson => {
+            response.json(updatedPerson)
+        })
+        .catch(error => next(error))
 })
 
 // Delete Person
@@ -99,10 +138,7 @@ app.delete('/api/persons/:id', (request, response) => {
         .then(result => {
             response.status(204).end()
         })
-        .catch(error => {
-            console.log(error)
-            response.status(400).send({ error: 'malformatted id' })
-        })
+        .catch(error => next(error))
 })
 
 app.get('/api/info', (request, response) => {
@@ -123,6 +159,19 @@ const unknownEndpoint = (request, response) => {
 };
 
 app.use(unknownEndpoint);
+
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message);
+
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'malformatted id' });
+    }
+
+    next(error);
+};
+
+// Error Handler Middleware when next(error) is called
+app.use(errorHandler);
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
